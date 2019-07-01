@@ -1,0 +1,113 @@
+html {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+    height: 7%;
+}
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+li a:hover {
+    background-color: #111;
+}
+
+body {
+    margin: 0;
+}
+
+.active {
+    background-color: #4CAF50;
+}
+
+.create-post-wrapper {
+    padding: 0;
+    height: 6%;
+}
+
+.create-post-input {
+    height: 100%;
+    width: 80%;
+    font-size: 200%;
+    float: left;
+}
+
+.create-post-button {
+    height: 100%;
+    float: right;
+    width: 15%;
+    margin-right: 2.5%;
+    font-size: 200%;
+}
+
+.posts-wrapper {
+    height: 85.2%;
+    overflow-y: scroll;
+}
+
+.post-wrapper {
+    border-top: gray solid 1px;
+    border-bottom: gray solid 1px;
+}
+
+.post-content {
+    margin-top: 1.5%;
+    margin-bottom: 1.5%;
+}
+
+.post-time {
+    color: gray;
+}
+
+@media all and (max-width: 980px){
+	li a {
+		font-size: 2.8793em;
+    }
+
+    ul {
+        height: 4.5%;
+    }
+
+    .create-post-wrapper {
+        height: 4%;
+    }
+
+    .posts-wrapper {
+        height: 91.2%;
+    }
+
+    .create-post-input {
+        height: 100%;
+        font-size: 350%;
+    }
+    
+    .create-post-button {
+        height: 100%;
+    }
+
+    .post-wrapper {
+        height: 10%;
+        font-size: 220%;
+    }
+}
