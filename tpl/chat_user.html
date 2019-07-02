@@ -11,5 +11,18 @@
             <li><a href="{{ url_for('room_list') }}">Group Messages</a></li>
             <li><a href="{{ url_for('settings') }}">Settings</a></li>
         </ul>
+        <div class="posts-wrapper">
+            {% for post in posts: %}
+                <div class="post-wrapper">
+                    <strong class="post-user">{{ post[0] }}</strong>
+                    <div class="post-content">{{ post[1] }}</div>
+                    <div class="post-time">{{ post[2] }}</div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="create-post-wrapper">
+            <input type="text" class="create-post-input">
+            <button class="create-post-button">Post</button>
+        </div>
     </body>
 </html>

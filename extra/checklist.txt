@@ -1,0 +1,27 @@
+1. finish list group page
+2. create new direct message page
+    - input for usernames to message
+    - requires a message to start the chat
+3. create new group message page
+    - input for usernames to add to the group
+    - requires a message to start the chat
+    - requires a name for the chat
+4. create group chatting page
+    - allow ability to change the name of the group
+5. finish the API class in api_class.js
+    - allow for polling for new messages
+    - allow for posting
+     -allow for checking for a similar name
+6. import the API class on all pages that need interaction with it
+    - feed
+        * poll the db for new messages
+        * posting new messages through js
+    - chat/<username> and groups/new
+        * poll the db for new messages
+        * post new messages with js
+    - chat/new and groups/new
+        * poll for names that are similar to the name typed
+7. integrate the API to said pages
+    - list new posts with createTextNode to avoid XSS
+8. create settings page
+    - change password

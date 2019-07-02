@@ -79,6 +79,49 @@ body {
     color: gray;
 }
 
+.chat-header-wrapper {
+    height: 6%;
+    border-bottom: gray solid 1px;
+    width: 100%;
+}
+
+.chat-create {
+    color: #4CAF50;
+    font-size: 200%;
+    margin-right: 10%;
+    float: right;
+    text-decoration: underline;
+}
+
+.chat-header {
+    margin-left: 10%;
+    font-size: 200%;
+    float: left;
+}
+
+.direct-message-wrapper {
+    float: none;
+    height: 85.2%;
+    overflow-y: scroll;
+}
+
+.chat-link {
+    color: gray;
+    display: inline-block;
+}
+
+.chat-username {
+    display: inline-block;
+    margin-right: 1%;
+    font-weight: bold;
+    margin-bottom: .5%;
+}
+
+.chat-last-time {
+    color: gray;
+    margin-top: .5%;
+}
+
 @media all and (max-width: 980px){
 	li a {
 		font-size: 2.8793em;
@@ -108,5 +151,19 @@ body {
     .post-wrapper {
         height: 10%;
         font-size: 220%;
+    }
+
+    .chat-header {
+        font-size: 400%;
+        text-align: center;
+        height: 4%;
+    }
+
+    .direct-message-wrapper {
+        height: 91.2%;
+    }
+
+    .chat-create {
+        font-size: 400%;
     }
 }

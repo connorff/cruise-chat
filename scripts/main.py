@@ -52,26 +52,34 @@ def chat_list():
     if not checkSession():
         return redirect("/")
     
-    return render_template("chat_list.html")
+    chats = messages.loadDirectChatByUser(session.get("id"))
 
+    return render_template("chat_list.html", chats=chats)
+print
 @app.route("/chat/<username>")
 def chat_user(username):
     if not checkSession():
         return redirect("/")
 
-    return render_template("chat_user.html", username=username)
+    user_id = user.getIdByUsername(username)[0]
+    chat = messages.loadDirectChat(session.get("id"), user_id)
+
+    return render_template("chat_user.html", username=username, posts=chat)
 
 @app.route("/chat/new")
 def chat_new():
     if not checkSession():
         return redirect("/")
 
+    print user.getUsernameLike("conn")
     return render_template("chat_new.html")
 
 @app.route("/groups")
 def room_list():
     if not checkSession():
         return redirect("/")
+
+    print messages.loadGroupChatsByUser(session.get("id"))
 
     return render_template("room_list.html")
 
@@ -112,8 +120,6 @@ def check_direct():
         return redirect("/")
     if not request.args.get("id"):
         return "false"
-
-    print session.get("id")
 
     if request.args.get("time"):
         return json.dumps(messages.loadDirectChat(request.args["id"], session.get("id"), request.args["time"]))
@@ -162,6 +168,16 @@ def post_group():
         return json.dumps(False)
 
     return json.dumps(messages.sendGroupChat(request.args["id"], session.get("id"), request.args["content"]))
+
+@app.route("/api/check_name")
+def check_name():
+    if not checkSession():
+        return redirect("/")
+
+    if not request.args.get("string"):
+        return json.dumps(False)
+
+    return json.dumps(user.getUsernameLike(request.args["string"]))
 
 def checkSession():
     if not session.get("username"):

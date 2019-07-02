@@ -30,3 +30,8 @@ CREATE TABLE direct_messages(
     time INT(11) NOT NULL,
     content VARCHAR(1000) NOT NULL
 );
+
+CREATE TABLE direct_rel(
+    user_1 INT(4) NOT NULL,
+    user_2 INT(4) NOT NULL
+);

@@ -65,6 +65,18 @@ class Messages:
         if not self.validate(content):
             return False
 
+        #checks if the chat has already been created
+        sql = "SELECT * FROM direct_rel WHERE (user_1 = %s AND user_2 = %s) OR (user_2 = %s AND user_1 = %s);" % (sender_id, target_id, sender_id, target_id)
+
+        self.db.execute(sql)
+
+        results = self.db.fetchall()
+
+        #if the chat has not been created yet, it makes it
+        if len(results) == 0:
+            sql = "INSERT INTO direct_rel (user_1, user_2) VALUES (%s, %s)" % (sender_id, target_id)
+            self.db.execute(sql)
+
         content = self.sanitize(content)
 
         sql = "INSERT INTO direct_messages (sender_id, target_id, content, time) VALUES (%s, %s, '%s', %s);" % (sender_id, target_id, content, int(time()),)
@@ -80,12 +92,48 @@ class Messages:
 
         sql = ""
         if not given_time:
-            sql = "SELECT * FROM direct_messages WHERE sender_id = %s AND target_id = %s;" % (sender_id, target_id,)
+            sql = "SELECT * FROM direct_messages WHERE (sender_id = %s AND target_id = %s) OR (target_id = %s AND sender_id = %s);" % (sender_id, target_id, sender_id, target_id,)
         else:
-            sql = "SELECT * FROM direct_messages WHERE sender_id = %s AND target_id = %s AND time > %s;" % (sender_id, target_id, given_time,)
+            sql = "SELECT * FROM direct_messages WHERE (sender_id = %s AND target_id = %s) OR (target_id = %s AND sender_id = %s) AND time > %s;" % (sender_id, target_id, sender_id, target_id, given_time,)
 
         self.db.execute(sql)
-        return self.db.fetchall()
+        results = list(self.db.fetchall())
+
+        data = []
+        for result in results:
+            time = self.getTime(result[2])
+            username = self.user.getUsernameById(result[1])[0]
+
+            data.append([username, result[3], time])
+
+        return data
+
+    def loadDirectChatByUser(self, user_id):
+        sql = "SELECT * FROM direct_rel WHERE user_1 = %s OR user_2 = %s;" % (user_id, user_id)
+
+        self.db.execute(sql)
+        results = self.db.fetchall()
+
+        users = []
+        for result in results:
+            chat_user = result[1] if user_id == result[0] else result[0]
+            sql = "SELECT * FROM direct_messages WHERE (sender_id = %s AND target_id = %s) OR (target_id = %s AND sender_id = %s) ORDER BY time DESC LIMIT 1;" % (user_id, chat_user, user_id, chat_user)
+
+            self.db.execute(sql)
+            last_sent = self.db.fetchone()
+            last_sent_user = ""
+            last_sent_content = last_sent[3]
+            last_sent_time = self.getTime(last_sent[2])
+
+            if last_sent[0] == user_id:
+                last_sent_user = "You said: "
+            else:
+                last_sent_user = "They said: "
+
+            chat_user = self.user.getUsernameById(chat_user)[0]
+            users.append([chat_user, last_sent_content, last_sent_user, last_sent_time])
+
+        return users
 
     def listGroupChats(self, user_id):
         if not self.user.checkIfIdExists(user_id):
@@ -167,6 +215,29 @@ class Messages:
         self.db.execute(sql)
 
         return self.db.fetchall()
+
+    def loadGroupChatsByUser(self, user_id):
+        sql = "SELECT * FROM group_rel WHERE user_id = %s;" % (user_id,)
+
+        self.db.execute(sql)
+        results = self.db.fetchall()
+
+        groups = []
+        for result in results:
+            sql = "SELECT group_name FROM group_messages WHERE group_id = %s" % (result[0])
+
+            self.db.execute(sql)
+            group_name = self.db.fetchone()
+
+            sql = "SELECT * FROM group_content WHERE group_id = %s ORDER BY time DESC LIMIT 1;" % (result[0])
+
+            self.db.execute(sql)
+            group_id, user_id, content, time = self.db.fetchone()
+            username = self.user.getUsernameById(user_id)
+
+            groups.append(group_name, group_id, "%s said:" % (username), content, self.getTime(time))
+
+        return groups
 
     def validate(self, content):
         if len(content) > 250:

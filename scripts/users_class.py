@@ -2,13 +2,13 @@ import re
 import bcrypt
 
 class User:
-	db = None
+    db = None
 	
-	def __init__(self, conn):
+    def __init__(self, conn):
 		self.conn = conn
 		self.db = self.conn.cursor()
 	
-	def checkIfIdExists(self, user_id):
+    def checkIfIdExists(self, user_id):
 		sql = "SELECT COUNT(*) FROM users WHERE id = %s;"
 		self.db.execute(sql, (user_id,))
 		
@@ -20,7 +20,7 @@ class User:
 			
 		return False
 		
-	def checkUsername(self, username):
+    def checkUsername(self, username):
 		username = username.lower()
 		
 		if not username:
@@ -42,7 +42,7 @@ class User:
 		
 		return True
 	
-	def checkUsernameExists(self, username):
+    def checkUsernameExists(self, username):
 		sql = "SELECT COUNT(*) FROM users WHERE username = %s;"
 		self.db.execute(sql, (username,))
 		
@@ -54,13 +54,13 @@ class User:
 			
 		return False
 		
-	def hashPassword(self, password):
+    def hashPassword(self, password):
 		return bcrypt.hashpw(password, bcrypt.gensalt(12))
 		
-	def checkPassword(self, password, hashed):
+    def checkPassword(self, password, hashed):
 		return bcrypt.checkpw(str(password), str(hashed))
 		
-	def createUser(self, username, password):
+    def createUser(self, username, password):
 		#if username is not valid
 		if not self.checkUsername(username):
 			return False
@@ -72,7 +72,7 @@ class User:
 		self.conn.commit()
 		return True
 		
-	def login(self, username, password):
+    def login(self, username, password):
 		sql = "SELECT password FROM users WHERE username = %s;"
 		self.db.execute(sql, (username, ))
 		result = self.db.fetchall()
@@ -87,14 +87,14 @@ class User:
 		
 		return False
 		
-	def changePassword(self, user_id, password):
+    def changePassword(self, user_id, password):
 		password = self.hashPassword(password)
 		
 		sql = "UPDATE users SET password = %s WHERE id = %s;"
 		self.db.execute(sql, (password, user_id))
 		return True
 	
-	def changeUsername(self, user_id, username):
+    def changeUsername(self, user_id, username):
 		if not self.checkUsername(username):
 			return False
 			
@@ -102,19 +102,19 @@ class User:
 		self.db.execute(sql, (username, user_id))
 		return True
 	
-	def loadUserData(self, username):
+    def loadUserData(self, username):
 		sql = "SELECT username, user_level FROM users WHERE username = %s;"
 		self.db.execute(sql, (username,))
 		
 		return self.db.fetchall()
 	
-	def listUsers(self):
+    def listUsers(self):
 		sql = "SELECT username, user_level FROM users;"
 		
 		self.db.execute(sql)
 		return self.db.fetchall()
 	
-	def editUserRights(self, username, new_level):
+    def editUserRights(self, username, new_level):
 		self_data = self.loadUserData(session["username"])
 		
 		#if the user is trying to give a level over themselves
@@ -128,14 +128,21 @@ class User:
 			
 		sql = "UPDATE users SET user_level = %s WHERE username = %s;"
 		self.db.execute()
-	def getUsernameById(self, user_id):
+    def getUsernameById(self, user_id):
 		sql = "SELECT username FROM users WHERE id = %s;"
 		
 		self.db.execute(sql, (user_id,))
 		username = self.db.fetchone()
 		return username
 		
-	def getIdByUsername(self, username):
+    def getUsernameLike(self, string):
+        sql = "SELECT username, id FROM users WHERE username LIKE %s OR username LIKE %s OR username LIKE %s;"
+
+        self.db.execute(sql, (string + "%", "%" + string, "%" + string + "%"))
+
+        return self.db.fetchall()
+
+    def getIdByUsername(self, username):
 		if not self.checkUsernameExists(username):
 			return False
 		
