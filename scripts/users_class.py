@@ -58,7 +58,7 @@ class User:
 		return bcrypt.hashpw(password, bcrypt.gensalt(12))
 		
 	def checkPassword(self, password, hashed):
-		return bcrypt.checkpw(password, str(hashed))
+		return bcrypt.checkpw(str(password), str(hashed))
 		
 	def createUser(self, username, password):
 		#if username is not valid

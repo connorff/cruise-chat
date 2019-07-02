@@ -45,6 +45,8 @@ class Messages:
         self.db.execute(sql)
         self.conn.commit()
 
+        return True
+
     #loads chats after certain id that defaults to None
     def loadGeneralChat(self, comment_id = None):
         sql = ""
@@ -69,6 +71,8 @@ class Messages:
 
         self.db.execute(sql)
         self.conn.commit()
+
+        return True
 
     def loadDirectChat(self, sender_id, target_id, given_time = None):
         if not self.user.checkIfIdExists(sender_id) or not self.user.checkIfIdExists(target_id):
@@ -152,8 +156,9 @@ class Messages:
         self.conn.commit()
 
     #loads chats after certain unix timestamp
-    def loadGroupChat(self, group_id, given_time = None):
-        sql = ""
+    def loadGroupChat(self, user_id, group_id, given_time = None):
+        sql = "SELECT * FROM group_rel WHERE user_id = %s AND group_id = %s;" % ()
+
         if not given_time:
             sql = "SELECT * FROM group_content WHERE group_id = %s;" % (group_id,)
         else:
@@ -184,6 +189,6 @@ class Messages:
 		elif diff < 86400:
 			return "About %s hours ago" % (int(diff / 3600))
 		elif diff < 31536000:
-			print "About %s days ago" & (int(diff / 86400))
+			return "About %s days ago" % (int(diff / 86400))
 		else:
-			print "More than a year ago"
+			return "More than a year ago"
