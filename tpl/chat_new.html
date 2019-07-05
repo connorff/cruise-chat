@@ -11,5 +11,85 @@
             <li><a href="{{ url_for('room_list') }}">Group Messages</a></li>
             <li><a href="{{ url_for('settings') }}">Settings</a></li>
         </ul>
+        <div class="add-group-users-wrapper">
+            <input type="text" id="add-users-input" placeholder="Username">
+            <div id="error-text"></div>
+            <div class="create-group-message" style="display: none !important" id="message-input">
+                What you would like to say to <span id="username-promt"></span>: <input type="text" id="message-input-box">
+            </div>
+            <div id="added-user"></div>
+            <form method="POST" id="add-user-form">
+                <input type="hidden" name="id" id="user-id">
+                <input type="hidden" name="message" id="chat-message">
+            </form>
+        </div>
+        <button id="create-group-button" style="display: none !important" class="create-group-button" onclick="sendForm()">Create Chat</button>
+        <div id="name-suggestions" style="overflow-y: scroll;"></div>
     </body>
 </html>
+<script src="{{ url_for('static', filename='api_class.js') }}"></script>
+<script>
+let my_api = new Cruise_API()
+let chat_id;
+let chat_username;
+
+document.getElementById("add-users-input").onkeyup = () => {
+    //do API thing here, assume it returns with a list of names
+    let names = my_api.checkName(document.getElementById("add-users-input").value, addUsers)
+}
+
+document.getElementById("message-input-box").onkeyup = () => {
+    let message = document.getElementById("message-input-box").value
+
+    if (my_api.checkMessage(message)){
+        document.getElementById("create-group-button").style.display = "block"
+    }
+    else {
+        document.getElementById("create-group-button").setAttribute("style", "display: none !important")
+    }
+}
+
+function addUsers(names) {
+    names = JSON.parse(names)
+
+    let names_el = document.getElementById("name-suggestions")
+
+    names_el.innerHTML = ""
+    for (let i = 0; i < names.length; i++) {
+        names_el.innerHTML += `<div class="name-sugg-wrapper"><div class="name-sugg-name">${names[i][0]}</div><div class="name-sugg-add" onclick="pushUser(${names[i][1]}, '${names[i][0]}')">Create Chat</div></div>`;
+    }
+}
+
+function pushUser(id, username) {
+    chat_id = id
+    chat_username = username
+
+    document.getElementById("username-promt").innerHTML = username
+
+    document.getElementById("message-input").style.display = "block"
+
+    my_api.checkChatCreated(id, checkCreated)
+}
+
+function checkCreated(isCreated) {
+    isCreated = JSON.parse(isCreated)
+    if (isCreated) {
+        document.getElementById("error-text").innerHTML = `You already have a chat with this person! Go <a href="/chat/${chat_username}">here</a> to chat with them`;
+    }
+    else {
+        document.getElementById("error-text").innerHTML = null
+    }
+}
+
+function sendForm() {
+    let message = document.getElementById("message-input-box").value
+
+    if (chat_id !== Number(chat_id) || !my_api.checkMessage(message)) {
+        return false
+    }
+
+    document.getElementById("chat-message").value = message
+    document.getElementById("user-id").value = chat_id
+    document.getElementById("add-user-form").submit()
+}
+</script>

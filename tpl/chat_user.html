@@ -11,7 +11,7 @@
             <li><a href="{{ url_for('room_list') }}">Group Messages</a></li>
             <li><a href="{{ url_for('settings') }}">Settings</a></li>
         </ul>
-        <div class="posts-wrapper">
+        <div class="posts-wrapper" id="all-posts">
             {% for post in posts: %}
                 <div class="post-wrapper">
                     <strong class="post-user">{{ post[0] }}</strong>
@@ -19,10 +19,63 @@
                     <div class="post-time">{{ post[2] }}</div>
                 </div>
             {% endfor %}
+            <div id="added-posts"></div>
         </div>
         <div class="create-post-wrapper">
-            <input type="text" class="create-post-input">
-            <button class="create-post-button">Post</button>
+            <input type="text" class="create-post-input" id="post-input">
+            <button class="create-post-button" onclick="sendChat()">Post</button>
         </div>
     </body>
 </html>
+<script src="{{ url_for('static', filename='api_class.js') }}"></script>
+<script>
+let my_api = new Cruise_API();
+
+let lastChatTime = {{ last_sent }}
+let user_id = {{ user_id }}
+
+document.getElementById("all-posts").scrollTop = document.getElementById("all-posts").scrollHeight
+
+setInterval(() => {
+    console.log(lastChatTime)
+
+    my_api.loadDirectChat(user_id, lastChatTime, addChat)
+}, 1000)
+
+function addChat(data) {
+    data = JSON.parse(data)
+
+    if (data == false || data === undefined) {
+        return
+    }
+
+    for (let i = 0; i < data.length; i++) {
+        //weird bug I can't fix is stopped with this:
+        if (data[i][0] === undefined) {
+            break
+        }
+
+        lastChatTime = data[i][3];
+
+        document.getElementById("added-posts").innerHTML += `<div class="post-wrapper">
+                    <strong class="post-user">${data[i][0]}</strong>
+                    <div class="post-content">${data[i][1]}</div>
+                    <div class="post-time">${data[i][2]}</div>
+                </div>`;
+
+        document.getElementById("all-posts").scrollTop = document.getElementById("all-posts").scrollHeight
+    }
+}
+
+function sendChat() {
+    my_api.sendDirectChat(user_id, document.getElementById('post-input').value)
+
+    document.getElementById('post-input').value = null
+}
+
+window.onkeydown = (e) => {
+    if (e.keyCode == 13) {
+        sendChat()
+    }
+}
+</script>

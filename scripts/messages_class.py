@@ -7,12 +7,15 @@ class Messages:
         self.conn = conn
         self.db = self.conn.cursor()
 
-    def createGroupChat(self, users):
+    def createGroupChat(self, self_user_id, users, message):
         if not isinstance(users, list):
-            return False
+            return [False, "There was an error processing the users"]
 
         #removes duplicate users from the chat
         users = list(dict.fromkeys(users))
+
+        if len(users) == 1:
+            return [False, "The group must have more than one other person"]
 
         #creates a new group chat and returns the id of the chat
         sql = "INSERT INTO group_messages (group_name) VALUES ('New Group');"
@@ -23,13 +26,23 @@ class Messages:
         #adds a row in the group relational table that relates the user id and the group id
         for user_id in users:
             if not self.user.checkIfIdExists(user_id):
-                return False
+                return [False, "A user listed does not exist"]
+
+            if user_id == self_user_id:
+                return [False, "group cannot contain yourself"]
 
             sql = "INSERT INTO group_rel (group_id, user_id) VALUES (%s, %s);" % (group_id, user_id,)
             self.db.execute(sql)
 
+        sql = "INSERT INTO group_rel (group_id, user_id) VALUES (%s, %s);" % (group_id, self_user_id,)
+        self.db.execute(sql)
+
+        sql = "INSERT INTO group_content (group_id, user_id, content, time) VALUES (%s, %s, '%s', %s);" % (group_id, self_user_id, message, int(time()))
+        
+        self.db.execute(sql)
+
         self.conn.commit()
-        return True
+        return [True, group_id]
 
     def addGeneralChat(self, content, user_id):
         if not self.user.checkIfIdExists(user_id):
@@ -60,10 +73,10 @@ class Messages:
 
     def addDirectChat(self, sender_id, target_id, content):
         if not self.user.checkIfIdExists(sender_id) or not self.user.checkIfIdExists(target_id):
-            return False
+            return [False, "Provided ID is not valid"]
 
         if not self.validate(content):
-            return False
+            return [False, "Content given is not valid"]
 
         #checks if the chat has already been created
         sql = "SELECT * FROM direct_rel WHERE (user_1 = %s AND user_2 = %s) OR (user_2 = %s AND user_1 = %s);" % (sender_id, target_id, sender_id, target_id)
@@ -84,7 +97,7 @@ class Messages:
         self.db.execute(sql)
         self.conn.commit()
 
-        return True
+        return [True]
 
     def loadDirectChat(self, sender_id, target_id, given_time = None):
         if not self.user.checkIfIdExists(sender_id) or not self.user.checkIfIdExists(target_id):
@@ -94,17 +107,20 @@ class Messages:
         if not given_time:
             sql = "SELECT * FROM direct_messages WHERE (sender_id = %s AND target_id = %s) OR (target_id = %s AND sender_id = %s);" % (sender_id, target_id, sender_id, target_id,)
         else:
-            sql = "SELECT * FROM direct_messages WHERE (sender_id = %s AND target_id = %s) OR (target_id = %s AND sender_id = %s) AND time > %s;" % (sender_id, target_id, sender_id, target_id, given_time,)
+            sql = "SELECT * FROM direct_messages WHERE ((sender_id = %s AND target_id = %s) OR (target_id = %s AND sender_id = %s)) AND time > %s;" % (sender_id, target_id, sender_id, target_id, given_time,)
 
         self.db.execute(sql)
         results = list(self.db.fetchall())
 
+        if len(results) == 0:
+            return False
+
         data = []
         for result in results:
             time = self.getTime(result[2])
-            username = self.user.getUsernameById(result[1])[0]
+            username = self.user.getUsernameById(result[0])[0]
 
-            data.append([username, result[3], time])
+            data.append([username, result[3], time, result[2]])
 
         return data
 
@@ -205,7 +221,7 @@ class Messages:
 
     #loads chats after certain unix timestamp
     def loadGroupChat(self, user_id, group_id, given_time = None):
-        sql = "SELECT * FROM group_rel WHERE user_id = %s AND group_id = %s;" % ()
+        sql = "SELECT * FROM group_rel WHERE user_id = %s AND group_id = %s;" % (user_id, group_id)
 
         if not given_time:
             sql = "SELECT * FROM group_content WHERE group_id = %s;" % (group_id,)
@@ -214,7 +230,19 @@ class Messages:
 
         self.db.execute(sql)
 
-        return self.db.fetchall()
+        posts = self.db.fetchall()
+
+        if len(posts) == 0:
+            return False
+
+        data = []
+        for post in posts:
+            username = self.user.getUsernameById(post[1])[0]
+            content = post[2]
+            post_time = self.getTime(post[3])
+            data.append([username, content, post_time, post[3]])
+
+        return data
 
     def loadGroupChatsByUser(self, user_id):
         sql = "SELECT * FROM group_rel WHERE user_id = %s;" % (user_id,)
@@ -227,15 +255,15 @@ class Messages:
             sql = "SELECT group_name FROM group_messages WHERE group_id = %s" % (result[0])
 
             self.db.execute(sql)
-            group_name = self.db.fetchone()
+            group_name = self.db.fetchone()[0]
 
             sql = "SELECT * FROM group_content WHERE group_id = %s ORDER BY time DESC LIMIT 1;" % (result[0])
 
             self.db.execute(sql)
             group_id, user_id, content, time = self.db.fetchone()
-            username = self.user.getUsernameById(user_id)
+            username = self.user.getUsernameById(user_id)[0]
 
-            groups.append(group_name, group_id, "%s said:" % (username), content, self.getTime(time))
+            groups.append([group_name, group_id, "%s said:" % (username), content, self.getTime(time), self.loadGroupUsers(group_id)])
 
         return groups
 
@@ -247,6 +275,16 @@ class Messages:
     
     def sanitize(self, content):
         return escape(content)
+
+    def hasDirectChatWith(self, self_id, user_id):
+        if not self.user.checkIfIdExists(user_id) or not self.user.checkIfIdExists(self_id):
+            return False
+        
+        sql = "SELECT COUNT(*) FROM direct_messages WHERE (sender_id = %s AND target_id = %s) OR (target_id = %s AND sender_id = %s)" % (self_id, user_id, self_id, user_id,)
+
+        self.db.execute(sql)
+
+        return (self.db.fetchone()[0] > 0)
 
     def getTime(self, timestamp):
 		currtime = int(time())

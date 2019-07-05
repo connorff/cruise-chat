@@ -11,5 +11,18 @@
             <li><a class="active" href="{{ url_for('room_list') }}">Group Messages</a></li>
             <li><a href="{{ url_for('settings') }}">Settings</a></li>
         </ul>
+        <div class="chat-header-wrapper">
+            <div class="chat-header">Your Groups:</div>
+            <a class="chat-create" href="{{ url_for('room_new') }}">Create a Group</a>
+        </div>
+        <div class="direct-message-wrapper">
+            {% for chat in chats: %}
+            <div class="post-wrapper">
+                <div class="chat-username">{{ chat[0] }} ({{ chat[5] }})</div><a class="chat-link" href="{{ url_for('room_id', room_id=chat[1]) }}">(/chat/{{ chat[1] }})</a>
+                <div class="chat-last-content">{{ chat[2] }} {{ chat[3] }}</div>
+                <div class="chat-last-time">{{ chat[4] }}</div>
+            </div>
+            {% endfor %}
+        </div>
     </body>
 </html>

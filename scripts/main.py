@@ -55,47 +55,87 @@ def chat_list():
     chats = messages.loadDirectChatByUser(session.get("id"))
 
     return render_template("chat_list.html", chats=chats)
-print
+
 @app.route("/chat/<username>")
 def chat_user(username):
     if not checkSession():
         return redirect("/")
 
-    user_id = user.getIdByUsername(username)[0]
+    user_id = user.getIdByUsername(username)
+
+    if not user_id:
+        return redirect(url_for("chat_new"))
+
+    user_id = user_id[0]
+    
     chat = messages.loadDirectChat(session.get("id"), user_id)
+    last_sent = chat[len(chat) - 1][3]
 
-    return render_template("chat_user.html", username=username, posts=chat)
+    return render_template("chat_user.html", username=username, posts=chat, last_sent=last_sent, user_id=user.getIdByUsername(username)[0])
 
-@app.route("/chat/new")
+@app.route("/chat/new", methods=["GET", "POST"])
 def chat_new():
     if not checkSession():
         return redirect("/")
 
-    print user.getUsernameLike("conn")
-    return render_template("chat_new.html")
+    if not request.form.get("message") or not request.form.get("id"):
+        return render_template("chat_new.html")
+
+    result = messages.addDirectChat(session.get("id"), request.form["id"], request.form["message"])
+
+    if not result[0]:
+        return render_template("chat_new.html", error=result[1])
+    
+    return redirect(url_for("chat_user", username=user.getUsernameById(request.form["id"])))
+    
 
 @app.route("/groups")
 def room_list():
     if not checkSession():
         return redirect("/")
 
-    print messages.loadGroupChatsByUser(session.get("id"))
+    chats = messages.loadGroupChatsByUser(session.get("id"))
+    
+    for i in range(len(chats)):
+        user_string = ""
+        for username in chats[i][5]:
+            if username == chats[i][5][len(chats[i][5]) - 1]:
+                user_string += username
+            else:
+                user_string += username + ", "
+        chats[i][5] = user_string
 
-    return render_template("room_list.html")
+    return render_template("room_list.html", chats=chats)
 
 @app.route("/groups/<room_id>")
 def room_id(room_id):
     if not checkSession():
         return redirect("/")
 
-    return render_template("room_id.html", room_id=room_id)
+    posts = messages.loadGroupChat(session.get("id"), room_id)
 
-@app.route("/groups/new")
+    last_sent = posts[len(posts) - 1][3]
+
+    return render_template("room_id.html", posts=posts, group_id=room_id, last_sent=last_sent)
+
+@app.route("/groups/new", methods=["GET", "POST"])
 def room_new():
     if not checkSession():
         return redirect("/")
 
-    return render_template("room_new.html")
+    if not request.form.get("users") or not request.form.get("message"):
+        return render_template("room_new.html")
+
+    users = json.loads(request.form["users"])
+    message = request.form["message"]
+
+    created = messages.createGroupChat(session.get("id"), users, message)
+    if not created[0]:
+        print created[1]
+        return render_template("room_new.html", error=created[1])
+    else:
+        return redirect(url_for("room_id", room_id=created[1]))
+    
 
 @app.route("/settings")
 def settings():
@@ -119,7 +159,7 @@ def check_direct():
     if not checkSession():
         return redirect("/")
     if not request.args.get("id"):
-        return "false"
+        return json.dumps(False)
 
     if request.args.get("time"):
         return json.dumps(messages.loadDirectChat(request.args["id"], session.get("id"), request.args["time"]))
@@ -178,6 +218,16 @@ def check_name():
         return json.dumps(False)
 
     return json.dumps(user.getUsernameLike(request.args["string"]))
+
+@app.route("/api/check_direct_chat")
+def check_direct_chat():
+    if not checkSession():
+        return redirect("/")
+
+    if not request.args.get("id"):
+        return json.dumps(False)
+
+    return json.dumps(messages.hasDirectChatWith(session.get("id"), request.args["id"]))
 
 def checkSession():
     if not session.get("username"):

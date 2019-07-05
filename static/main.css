@@ -122,6 +122,85 @@ body {
     margin-top: .5%;
 }
 
+.add-group-users-wrapper {
+    height: auto;
+}
+
+#add-users-input {
+    border-radius: 2em;
+    border: 1px solid black;
+    display: block;
+    margin: 1% auto 1% auto;
+    height: 10%;
+    width: 60%;
+    font-size: 300%;
+    text-align: center;
+}
+
+#name-suggestions {
+    border-top: gray solid 1px;
+}
+
+.name-sugg-wrapper {
+    width: 100%;
+    border-bottom: gray solid 1px;
+    font-size: 200%;
+    padding-top: 1%;
+    padding-bottom: 1%;
+}
+
+.name-sugg-name {
+    display: inline-block;
+    margin-right: 5%;
+}
+
+.name-sugg-add {
+    color: green;
+    text-decoration: underline;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.added-user-wrapper {
+    text-align: center;
+    font-size: 200%;
+}
+
+.added-user-name {
+    padding-right: 2%;
+}
+
+.added-user-remove {
+    color: red;
+    text-decoration: underline;
+    cursor: pointer;
+    padding-left: 2%;
+}
+
+.create-group-message {
+    text-align: center;
+    margin-top: 2%;
+    margin-bottom: 2%;
+}
+
+.create-group-button {
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 2em;
+    border: 1px solid black;
+    height: 2em;
+    width: 15%;
+    font-size: 150%;
+    padding: 0;
+    display: block;
+    margin: 2% auto 1% auto;
+}
+
+#error-text {
+    color: red;
+    text-align: center;
+}
+
 @media all and (max-width: 980px){
 	li a {
 		font-size: 2.8793em;
@@ -133,6 +212,12 @@ body {
 
     .create-post-wrapper {
         height: 4%;
+    }
+
+    #add-users-input {
+        height: 5%;
+        font-size: 500%;
+        margin: 3% auto 3% auto;
     }
 
     .posts-wrapper {
@@ -165,5 +250,35 @@ body {
 
     .chat-create {
         font-size: 400%;
+    }
+
+    .create-group-message {
+        font-size: 250%;
+    }
+
+    #message-input-box {
+        width: 30%;
+        height: 1em;
+        font-size: 100%;
+    }
+
+    .name-sugg-name {
+        font-size: 150%;
+    }
+
+    .name-sugg-add {
+        font-size: 150%;
+    }
+
+    .added-user-name {
+        font-size: 150%;
+    }
+
+    .added-user-remove {
+        font-size: 150%;
+    }
+
+    .create-group-button {
+        width: 20%;
     }
 }

@@ -11,5 +11,98 @@
             <li><a class="active" href="{{ url_for('room_list') }}">Group Messages</a></li>
             <li><a href="{{ url_for('settings') }}">Settings</a></li>
         </ul>
+        <div class="add-group-users-wrapper">
+            <input type="text" id="add-users-input" placeholder="Username">
+            <div class="create-group-message" style="display: none !important" id="message-input">
+                Type your message to create the group: <input type="text" id="message-input-box">
+            </div>
+            <div id="added-users"></div>
+            <form method="POST" id="add-users-form">
+                <input type="hidden" name="users" id="group-users">
+                <input type="hidden" name="message" id="group-message">
+            </form>
+        </div>
+        <button id="create-group-button" style="display: none !important" class="create-group-button" onclick="sendForm()">Create Group</button>
+        <div id="name-suggestions" style="overflow-y: scroll;"></div>
     </body>
 </html>
+<script src="{{ url_for('static', filename='api_class.js') }}"></script>
+<script>
+let my_api = new Cruise_API()
+
+let added_id = []
+let added_usernames = []
+
+document.getElementById("add-users-input").onkeyup = () => {
+    //do API thing here, assume it returns with a list of names
+    let names = my_api.checkName(document.getElementById("add-users-input").value, addUsers)
+}
+
+document.getElementById("message-input-box").onkeyup = () => {
+    let message = document.getElementById("message-input-box").value
+
+    if (my_api.checkMessage(message)){
+        document.getElementById("create-group-button").style.display = "block"
+    }
+    else {
+        document.getElementById("create-group-button").setAttribute("style", "display: none !important")
+    }
+}
+
+function addUsers(names) {
+    names = JSON.parse(names)
+
+    let names_el = document.getElementById("name-suggestions")
+
+    names_el.innerHTML = ""
+    for (let i = 0; i < names.length; i++) {
+        names_el.innerHTML += `<div class="name-sugg-wrapper"><div class="name-sugg-name">${names[i][0]}</div><div class="name-sugg-add" onclick="pushUser(${names[i][1]}, '${names[i][0]}')">Add to group</div></div>`;
+    }
+}
+
+function pushUser(id, username) {
+    if (added_id.indexOf(id) !== -1) {
+        return
+    }
+
+    added_id.push(id)
+    added_usernames.push(username)
+
+    let added_list = document.getElementById("added-users")
+
+    added_list.innerHTML += `<div id='added-user-${id}' class="added-user-wrapper">
+                                <span class="added-user-name">${username}</span>
+                                <span class="added-user-remove" onclick="removeUser(${id})">Remove</span>
+                            </div>`;
+
+    document.getElementById("message-input").style.display = "block"
+}
+
+function removeUser(id) {
+    let id_index = added_id.indexOf(id)
+    document.getElementById("message-input").style.display = "hidden"
+    document.getElementById(`added-user-${id}`).parentNode.removeChild(document.getElementById(`added-user-${id}`))
+
+    //remove both elements from respective arrays
+    added_id.splice(id_index, 1)
+    added_usernames.splice(id_index, 1)
+
+    if (!added_id.length) {
+        document.getElementById("message-input").setAttribute("style", "display: none !important")
+        document.getElementById("create-group-button").setAttribute("style", "display: none !important")
+    }
+}
+
+function sendForm() {
+    let message = document.getElementById("message-input-box").value
+    let added_id_json = JSON.stringify(added_id)
+
+    if (!added_id.length || !my_api.checkMessage(message)) {
+        return false
+    }
+
+    document.getElementById("group-message").value = message
+    document.getElementById("group-users").value = added_id_json
+    document.getElementById("add-users-form").submit()
+}
+</script>
