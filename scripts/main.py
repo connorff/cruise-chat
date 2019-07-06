@@ -39,13 +39,9 @@ def feed():
 
     posts = list(messages.loadGeneralChat())
 
-    i = 0
-    for i in range(len(posts)):
-        posts[i] = list(posts[i])
-        posts[i][2] = user.getUsernameById(posts[i][2])[0]
-        posts[i][3] = messages.getTime(posts[i][3])
+    last_sent = posts[len(posts) - 1][3]
 
-    return render_template("feed.html", posts = posts)
+    return render_template("feed.html", posts = posts, last_sent=last_sent)
 
 @app.route("/chat")
 def chat_list():

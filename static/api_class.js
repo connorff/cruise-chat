@@ -3,6 +3,26 @@ class Cruise_API {
         this.xhr = new XMLHttpRequest();
     }
 
+    loadGeneralChat(post_id, callback) {
+        this.xhr.onreadystatechange = () => {
+            if (this.xhr.status == 200 && this.xhr.readyState == 4) {
+                callback(this.xhr.responseText);
+            }
+        }
+
+        this.xhr.open("GET", `/api/check_general?id=${post_id}`, true);
+        this.xhr.send();
+    }
+
+    sendGeneralChat(content) {
+        if (!this.checkMessage(content)) {
+            return false
+        }
+
+        this.xhr.open("GET", `/api/post_general?content=${content}`, true);
+        this.xhr.send();
+    }
+
     sendGroupChat(group_id, content) {
         if (!this.checkMessage(content)) {
             return false

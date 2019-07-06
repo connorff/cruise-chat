@@ -69,7 +69,16 @@ class Messages:
             sql = "SELECT * FROM general_chat WHERE comment_id > %s;" % (comment_id,)
 
         self.db.execute(sql)
-        return self.db.fetchall()
+        results = self.db.fetchall()
+
+        data = []
+        for result in results:
+            time = self.getTime(result[3])
+            username = self.user.getUsernameById(result[2])[0]
+
+            data.append([username, result[1], time, result[0]])
+
+        return data
 
     def addDirectChat(self, sender_id, target_id, content):
         if not self.user.checkIfIdExists(sender_id) or not self.user.checkIfIdExists(target_id):
